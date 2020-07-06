@@ -1,6 +1,7 @@
 # ML-Math
 
-This repository is part of our MLT もくもく会 Math Reading Sessions. 
+This repository is part of our **MLT もくもく会 Math Reading Sessions** and the **MLT Mathematics for Machine Learning Discussions**. 
+
 
 # Review sessions and presentations
 
@@ -12,7 +13,6 @@ This repository is part of our MLT もくもく会 Math Reading Sessions.
 - [Fourier transforms and a brief comparison with SVD](https://www.youtube.com/watch?v=8zRmr25vYBw&list=PLaPdEEY26UXygpV-Cxch8Xkpl7IbFKBvK&index=4&t=0s) by [Jayson Cunanan, Ph.D.](https://www.linkedin.com/in/jayson-cunanan-phd/), AI Researcher/Engineer at AI inside 株式会社
 - [ML Math Review Session: Singular Value Decomposition](https://www.youtube.com/watch?v=PrIv-7SBTw8&list=PLaPdEEY26UXygpV-Cxch8Xkpl7IbFKBvK&index=3&t=0s) by [Emil Vatai](https://twitter.com/vatai), Postdoctoral Researcher, RIKEN, Japan (Review Chapter 4: Matrix Decompositions)
 - [ML Math Review Session: Groups, residue classes](https://www.youtube.com/watch?v=nOxQ1vRt_p0&list=PLaPdEEY26UXygpV-Cxch8Xkpl7IbFKBvK&index=2&t=0s) by [Emil Vatai](https://twitter.com/vatai), Postdoctoral Researcher, RIKEN, Japan (Review Chapter 2: Linear Algebra)
-
 
 
 # Reading sessions
