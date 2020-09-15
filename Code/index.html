@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Gaussian Mixture Models (GMM)</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Pavitra Chakravarty" />
+    <meta name="date" content="2020-09-13" />
+    <script src="assets/header-attrs/header-attrs.js"></script>
+    <link href="assets/tile-view/tile-view.css" rel="stylesheet" />
+    <script src="assets/tile-view/tile-view.js"></script>
+    <link href="assets/panelset/panelset.css" rel="stylesheet" />
+    <script src="assets/panelset/panelset.js"></script>
+    <script src="assets/xaringanExtra-webcam/webcam.js"></script>
+    <script id="xaringanExtra-webcam-options" type="application/json">{"width":"200","height":"200","margin":"1em"}</script>
+    <script type="application/json" id="xaringanExtra-editable-docid">{"id":"ebffddb55f99446aa6ab38c07b7b038d","expires":14}</script>
+    <script src="assets/himalaya/himalaya.js"></script>
+    <script src="assets/js-cookie/js.cookie.js"></script>
+    <link href="assets/editable/editable.css" rel="stylesheet" />
+    <script src="assets/editable/editable.js"></script>
+    <link href="assets/xaringanExtra-extra-styles/xaringanExtra-extra-styles.css" rel="stylesheet" />
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
+    <link rel="stylesheet" href="xaringan-extra.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+
+
+class: title-slide middle
+
+# Gaussian Mixture Models (GMM)
+
+## Fitting GMMs using the Expectation-Maximization (E-M) Algorithm in R
+
+.author[
+Pavitra Chakravarty
+]
+
+.twitter[
+@genomixgmailcom
+]
+
+&lt;img src="images/MLT Logo black background.png" class="user-logo" /&gt;
+
+
+
+
+
+
+
+
+---
+
+
+class: middle
+
+# What are Gaussian Mixture Models (GMM)? 
+
+
+* A mixture model is a mixture of k component distributions that collectively make a mixture distribution `\(f(x)\)`:
+
+`$$f(x) = \sum_{k=1}^{K}\alpha_{k}f_{k}(x)$$`
+* `\(\alpha_{k}\)`: mixing weight for the `\(k^{th}\)` component where `\(\sum_{k=1}^{K}\alpha_{k} = 1\)`
+
+* `\(f_k(x)\)`:     any sort of distribution (preferably, parametric). If you choose gaussian, you get GMM
+
+* `\(\theta_{k}\)`: `$$f(x) = \sum_{k=1}^{K}\alpha_{k}f_{k}(x;\theta_{k})$$`
+
+---
+
+class: middle
+
+# Features of GMMs
+
+$$ \mathcal{N}(\mu, \sigma^2) $$
+
+The normal distribution is parameterized by two variables:
+
+* `\(\mu\)`: Mean; Center of the mass
+
+* `\(\sigma^2\)`: Variance; Spread of the mass
+
+* Entire data can be represented as a k-mixture GMM
+
+
+---
+
+# Meet the Palmer penguins
+
+&lt;img src="figs/lter_penguins.png" width="576" style="display: block; margin: auto;" /&gt;
+
+# &lt;a href='https://allisonhorst.github.io/palmerpenguins'&gt;&lt;img src='figs/palmerpenguins.png' align="right" height="138.5" /&gt;&lt;/a&gt;
+
+---
+
+&lt;img src="figs/all_peng-1.png" width="1037" style="display: block; margin: auto;" /&gt;
+
+# &lt;a href='https://cran.r-project.org/web/packages/explore/vignettes/explore_penguins.html'&gt;&lt;img src='figs/culmen_depth.png' align="right" height="60.5" /&gt;&lt;/a&gt;
+
+
+---
+
+class: middle
+
+# "Complete Data" Scenario
+
+---
+
+class: bigger
+
+.panelset[
+.panel[.panel-name[Penguins]
+
+
+```r
+flipper_bill &lt;- ggplot(data = penguins,
+                         aes(x = flipper_length_mm,
+                             y = bill_length_mm)) +
+  geom_point(aes(color = species, 
+                 shape = species),
+             size = 3,
+             alpha = 0.8) +
+  theme_minimal() +
+  scale_color_manual(values = c("darkorange","purple","cyan4")) +
+  labs(title = "Flipper and bill length",
+       subtitle = "Dimensions for Adelie, Chinstrap and Gentoo Penguins at Palmer Station LTER",
+       x = "Flipper length (mm)",
+       y = "Bill length (mm)",
+       color = "Penguin species",
+       shape = "Penguin species") +
+  theme(legend.position = c(0.85, 0.15),
+        legend.background = element_rect(fill = "white", color = NA),
+        plot.title.position = "plot",
+        plot.caption = element_text(hjust = 0, face= "italic"),
+        plot.caption.position = "plot")
+
+flipper_bill
+```
+]
+
+
+.panel[.panel-name[Plot]
+&lt;img src="figs/README-flipper-hist-1.png" width="573" style="display: block; margin: auto;" /&gt;
+]
+]
+---
+
+class: middle
+
+# "Incomplete Data" Scenario
+
+---
+
+class: bigger
+
+.panelset[
+.panel[.panel-name[Density of Flipper Length]
+
+
+```r
+flipper_len_density &lt;- ggplot(data = penguins,
+                         aes(x = flipper_length_mm)) +
+  geom_density() +
+  theme_minimal() +
+  
+  labs(title = "Flipper length density",
+       subtitle = "Dimensions for Adelie, Chinstrap and Gentoo Penguins at Palmer Station LTER",
+       x = "Flipper length (mm)",
+       y = "Density",
+       color = "Penguin species",
+       shape = "Penguin species") +
+  theme(legend.position = c(0.85, 0.15),
+        legend.background = element_rect(fill = "white", color = NA),
+        plot.title.position = "plot",
+        plot.caption = element_text(hjust = 0, face= "italic"),
+        plot.caption.position = "plot") 
+
+flipper_len_density &lt;- flipper_len_density +
+  geom_vline(xintercept = 192, col = "red", size = 2) + 
+  geom_vline(xintercept = 215, col = "blue", size = 2) 
+
+flipper_len_density
+```
+]
+
+
+.panel[.panel-name[Plot]
+![](figs/peng_flipper_len_density-1.png)
+]
+]
+
+---
+
+class: middle
+
+# Black-box approach to get GMM
+
+---
+
+class: bigger
+
+.panelset[
+.panel[.panel-name[MixEM_Blackbox_code]
+
+
+```r
+plot_mix_comps &lt;- function(x, mu, sigma, lam) {
+  lam * dnorm(x, mu, sigma)
+}
+
+set.seed(1)
+wait &lt;- penguins$flipper_length_mm
+wait &lt;- na.omit(penguins$flipper_length_mm)
+mixmdl &lt;- normalmixEM(wait, k = 2)
+```
+
+number of iterations= 30 
+
+```r
+data.frame(x = mixmdl$x) %&gt;%
+  ggplot() +
+  geom_histogram(aes(x, ..density..), binwidth = 1, colour = "black", 
+                 fill = "white") +
+  stat_function(geom = "line", fun = plot_mix_comps,
+                args = list(mixmdl$mu[1], mixmdl$sigma[1], lam = mixmdl$lambda[1]),
+                colour = "red", lwd = 1.5) +
+  stat_function(geom = "line", fun = plot_mix_comps,
+                args = list(mixmdl$mu[2], mixmdl$sigma[2], lam = mixmdl$lambda[2]),
+                colour = "blue", lwd = 1.5) +
+  ylab("Density")
+```
+]
+
+.panel[.panel-name[Output 1]
+
+
+```r
+mixmdl$lambda
+```
+
+[1] 0.6010486 0.3989514
+
+```r
+mixmdl$mu
+```
+
+[1] 190.9169 215.9784
+
+```r
+mixmdl$sigma
+```
+
+[1] 6.495086 7.288229
+]
+
+.panel[.panel-name[Output 2]
+
+
+```r
+mixmdl$loglik
+```
+
+[1] -1343.162
+
+```r
+head(mixmdl$posterior, n = 25L)
+```
+
+         comp.1       comp.2
+ [1,] 0.9999811 1.890512e-05
+ [2,] 0.9998331 1.668993e-04
+ [3,] 0.9886824 1.131760e-02
+ [4,] 0.9956952 4.304820e-03
+ [5,] 0.9989602 1.039833e-03
+ [6,] 0.9999811 1.890512e-05
+ [7,] 0.9886824 1.131760e-02
+ [8,] 0.9956952 4.304820e-03
+ [9,] 0.9989602 1.039833e-03
+[10,] 0.9998331 1.668993e-04
+[11,] 0.9999876 1.240939e-05
+[12,] 0.9999711 2.894180e-05
+[13,] 0.9983377 1.662310e-03
+[14,] 0.9513341 4.866590e-02
+[15,] 0.9998931 1.069191e-04
+[16,] 0.9886824 1.131760e-02
+[17,] 0.9700206 2.997937e-02
+[18,] 0.9999312 6.882800e-05
+[19,] 0.9930311 6.968937e-03
+[20,] 0.9999989 1.099661e-06
+[21,] 0.9999876 1.240939e-05
+[22,] 0.9993465 6.534786e-04
+[23,] 0.9998931 1.069191e-04
+[24,] 0.9999876 1.240939e-05
+[25,] 0.9997382 2.617925e-04
+]
+
+.panel[.panel-name[Plot]
+![](figs/code-1.png)
+]
+]
+
+---
+
+class: middle
+
+# Refresher
+
+---
+
+
+# K-means algorithm
+
+Goal: represent dataset as K clusters, each summarized by point estimate:$$\mu$$
+
+Initialize prototypes and iterate between:
+
+* E-step: assign data point to nearest prototype
+
+* M-step: update prototypes to be cluster means
+
+* Minimize Cost function
+
+&lt;img src="figs/Kmeans_loss.png" width="498" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Gaussian Probabilistic Clustering
+
+Goal: represent probability distribution of data as ***Mixture Model***
+
+* Mixtures of Gaussians
+
+* Capture uncertainty in cluster assignments
+
+* Maximize Likelihood
+
+`$$P(X|\mu,\sigma,\alpha) = \sum_{k=1}^{K}\alpha_k\mathcal{N}(X|\mu_{k},\sigma_{k}^{2})$$`
+`$$P(X|\mu,\sigma,\alpha) = \alpha_1\mathcal{N}(X|\mu_{1},\sigma_{1}^{2}) +  \alpha_2\mathcal{N}(X|\mu_{2},\sigma_{2}^{2})$$`
+
+---
+
+class: middle
+
+
+The expectation maximization algorithm is a natural generalization of maximum likelihood estimation to the incomplete data case
+
+Chuong B Do &amp; Serafim Batzoglou. 
+
+*What is the expectation maximization algorithm? Nature Biotechnology. 2008*
+
+---
+
+.pull-left[
+
+### Maximum Likelihood Estimation
+
+`\(\mu_{k} = \frac{\sum_{i}^{N_{k}}x_{i,k}}{N_{k}}\)`
+
+`\(\sigma_{k} = \frac{\sum_{i}^{N_{k}}(x_{i,k} - \mu_{k})^2}{N_{k}}\)`
+  
+`\(\alpha_{k} = \frac{N_{k}}{N}\)`
+  
+]
+
+.pull-right[
+
+### Expectation Maximization
+
+GMM equation:
+
+`$$P(X|\mu,\sigma,\alpha) = \sum_{k=1}^{K}\alpha_k\mathcal{N}(X|\mu_{k},\sigma_{k}^{2})$$`
+
+Bayes' Rule:
+
+`$$P(x_{i} \in k_{j} | x_{i}) = \frac{P(x_{i} | x_{i} \in k_{j})P(k_{j})}{P(x_{i})}$$`
+What we are interested in is `\(P(x_{i} \in k_{j} | x_{i})\)` "posterior probability" 
+
+***Expectation***: calculate "posterior probability"
+
+***Maximization***: re-estimate parameters using variant of MLE
+
+]
+
+---
+
+&lt;img src="figs/NBT_EM.png" width="430" style="display: block; margin: auto;" /&gt;
+
+---
+
+class: middle
+
+# How do you test if MLE/EM performed well?
+
+***USING LOSS FUNCTION***
+
+---
+
+.pull-left[
+
+### MLE
+
+Minimize Loss
+
+&lt;img src="figs/Kmeans_loss.png" width="498" style="display: block; margin: auto;" /&gt;
+  
+]
+
+.pull-right[
+
+### E-M
+
+Maximize Log Likelihood
+
+
+&lt;img src="figs/EM_loss.png" width="764" style="display: block; margin: auto;" /&gt;
+
+]
+
+---
+
+class: middle
+
+# What is going on inside the E-M?
+
+## Imagine when our data is 'unlabeled' or 'incomplete'
+
+---
+
+class: bigger
+
+.panelset[
+.panel[.panel-name[EM_Initial]
+
+
+```r
+wait &lt;- na.omit(penguins$flipper_length_mm)
+
+wait.kmeans &lt;- kmeans(wait, 2)
+wait.kmeans.cluster &lt;- wait.kmeans$cluster
+
+wait.df &lt;- data_frame(x = wait, cluster = wait.kmeans.cluster)
+
+wait1.df &lt;- wait.df %&gt;%
+  mutate(num = row_number()) %&gt;%
+  ggplot(aes(y = num, x = x, color = factor(cluster))) +
+  geom_point() +
+  ylab("Values") +
+  ylab("Data Point Number") +
+  scale_color_discrete(name = "Cluster") +
+  ggtitle("K-means Clustering")
+
+wait1.df
+```
+]
+
+.panel[.panel-name[Plot]
+![](figs/EM_init-1.png)
+]
+]
+
+---
+
+class: middle
+
+# E-M: "Initialization" step
+
+---
+
+class: bigger
+
+.panelset[
+.panel[.panel-name[code]
+
+
+```r
+ wait.summary.df &lt;-  wait.df %&gt;%
+  group_by(cluster) %&gt;%
+  summarize(mu = mean(x), variance = var(x), std = sd(x), size = n(), .groups = 'drop') 
+wait.summary.df &lt;- wait.summary.df %&gt;%
+  mutate(alpha = size / sum(size))
+```
+]
+
+.panel[.panel-name[Output]
+
+
+```r
+wait.summary.df$cluster
+```
+
+[1] 1 2
+
+```r
+wait.summary.df$size
+```
+
+[1] 209 133
+
+```r
+wait.summary.df$alpha
+```
+
+[1] 0.6111111 0.3888889
+]
+]
+
+---
+
+class: middle
+
+# E-M: "Expectation" step
+
+---
+
+class: bigger
+
+.panelset[
+.panel[.panel-name[code]
+
+
+```r
+e_step &lt;- function(x, mu.vector, sd.vector, alpha.vector) {
+  comp1.prod &lt;- dnorm(x, mu.vector[1], sd.vector[1]) * alpha.vector[1]
+  comp2.prod &lt;- dnorm(x, mu.vector[2], sd.vector[2]) * alpha.vector[2]
+  sum.of.comps &lt;- comp1.prod + comp2.prod
+  comp1.post &lt;- comp1.prod / sum.of.comps
+  comp2.post &lt;- comp2.prod / sum.of.comps
+
+  sum.of.comps.ln &lt;- log(sum.of.comps, base = exp(1))
+  sum.of.comps.ln.sum &lt;- sum(sum.of.comps.ln)
+
+  list("loglik" = sum.of.comps.ln.sum,
+       "posterior.df" = cbind(comp1.post, comp2.post))
+}
+```
+]
+
+.panel[.panel-name[Output]
+
+&lt;img src="figs/posterior_df.png" width="605" style="display: block; margin: auto;" /&gt;
+]
+]
+
+---
+
+class: middle
+
+# E-M: "Maximization" step
+
+---
+
+class: bigger
+
+.panelset[
+.panel[.panel-name[code]
+
+
+```r
+m_step &lt;- function(x, posterior.df) {
+  comp1.n &lt;- sum(posterior.df[, 1])
+  comp2.n &lt;- sum(posterior.df[, 2])
+
+  comp1.mu &lt;- 1/comp1.n * sum(posterior.df[, 1] * x)
+  comp2.mu &lt;- 1/comp2.n * sum(posterior.df[, 2] * x)
+
+  comp1.var &lt;- sum(posterior.df[, 1] * (x - comp1.mu)^2) * 1/comp1.n
+  comp2.var &lt;- sum(posterior.df[, 2] * (x - comp2.mu)^2) * 1/comp2.n
+
+  comp1.alpha &lt;- comp1.n / length(x)
+  comp2.alpha &lt;- comp2.n / length(x)
+
+  list("mu" = c(comp1.mu, comp2.mu),
+       "var" = c(comp1.var, comp2.var),
+       "alpha" = c(comp1.alpha, comp2.alpha))
+}
+```
+
+]
+
+.panel[.panel-name[EM-Loop]
+
+
+```r
+for (i in 1:50) {
+  if (i == 1) {
+    # Initialization
+    e.step &lt;- e_step(wait, wait.summary.df[["mu"]], wait.summary.df[["std"]],
+                     wait.summary.df[["alpha"]])
+    m.step &lt;- m_step(wait, e.step[["posterior.df"]])
+    cur.loglik &lt;- e.step[["loglik"]]
+    loglik.vector &lt;- e.step[["loglik"]]
+  } else {
+    # Repeat E and M steps till convergence
+    e.step &lt;- e_step(wait, m.step[["mu"]], sqrt(m.step[["var"]]), 
+                     m.step[["alpha"]])
+    m.step &lt;- m_step(wait, e.step[["posterior.df"]])
+    loglik.vector &lt;- c(loglik.vector, e.step[["loglik"]])
+
+    loglik.diff &lt;- abs((cur.loglik - e.step[["loglik"]]))
+    if(loglik.diff &lt; 1e-6) {
+      break
+    } else {
+      cur.loglik &lt;- e.step[["loglik"]]
+    }
+  }
+}
+
+loglik.vector
+```
+
+ [1] -1344.018 -1343.304 -1343.221 -1343.194 -1343.179 -1343.172 -1343.167
+ [8] -1343.165 -1343.164 -1343.163 -1343.162 -1343.162 -1343.162 -1343.162
+[15] -1343.162 -1343.162 -1343.162 -1343.162 -1343.162 -1343.162 -1343.162
+[22] -1343.162
+]
+
+.panel[.panel-name[Output]
+
+&lt;img src="figs/loglik.png" width="1075" style="display: block; margin: auto;" /&gt;
+]
+]
+
+---
+
+class: middle
+
+# Final GMM from running E-M
+
+---
+
+class: bigger
+
+.panelset[
+.panel[.panel-name[code]
+
+
+```r
+plot_mix_comps &lt;- function(x, mu, sigma, lam) {
+  lam * dnorm(x, mu, sigma)
+}
+
+final_gmm_plot &lt;- data.frame(x = wait) %&gt;%
+  ggplot() +
+  geom_histogram(aes(x, ..density..), binwidth = 1, colour = "black", 
+                 fill = "white") +
+  stat_function(geom = "line", fun = plot_mix_comps,
+                args = list(m.step$mu[1], sqrt(m.step$var[1]), 
+                           lam = m.step$alpha[1]),
+                colour = "red", lwd = 1.5) +
+  stat_function(geom = "line", fun = plot_mix_comps,
+                args = list(m.step$mu[2], sqrt(m.step$var[2]), 
+                           lam = m.step$alpha[2]),
+                colour = "blue", lwd = 1.5) +
+  ylab("Density") +
+  xlab("Values") +
+  ggtitle("Final GMM Fit")
+
+final_gmm_plot
+```
+
+]
+
+.panel[.panel-name[Plot]
+![](figs/code_EM_GMM-1.png)
+]
+]
+
+---
+
+class: middle
+
+# Acknowledgments
+
+### I would like to specially acknowledge the work of [***Dr. Fong Chun Chan***](https://tinyheero.github.io/about/). He had already developed all the code that was used in these slides. 
+### I only adapted his code to work with the [***penguins***](https://education.rstudio.com/blog/2020/07/palmerpenguins-cran/) dataset
+
+---
+
+# References
+
+
+
+- 
+&lt;p&gt;&lt;cite&gt;Chan, F. C.
+(2016).
+&amp;ldquo;Fitting a Mixture Model Using the Expectation-Maximization Algorithm in R&amp;rdquo;.
+In: &lt;em&gt;https://tinyheero.github.io/2016/01/03/gmm-em.html&lt;/em&gt;.&lt;/cite&gt;&lt;/p&gt;
+- 
+&lt;p&gt;&lt;cite&gt;Chan, F. C.
+(2015).
+&amp;ldquo;Using Mixture Models for Clustering&amp;rdquo;.
+In: &lt;em&gt;https://tinyheero.github.io/2015/10/13/mixture-model.html&lt;/em&gt;.&lt;/cite&gt;&lt;/p&gt;
+- 
+&lt;p&gt;&lt;cite&gt;Buie, G. A.
+(2015).
+&amp;ldquo;Your Slides are So Extra&amp;rdquo;.
+In: &lt;em&gt;https://www.garrickadenbuie.com/talk/extra-special-xaringan/&lt;/em&gt;.&lt;/cite&gt;&lt;/p&gt;
+- 
+&lt;p&gt;&lt;cite&gt;Horst, A.
+(2020).
+&amp;ldquo;Introduction to palmerpenguins&amp;rdquo;.
+In: &lt;em&gt;https://allisonhorst.github.io/palmerpenguins/articles/intro.html&lt;/em&gt;.&lt;/cite&gt;&lt;/p&gt;
+- 
+&lt;p&gt;&lt;cite&gt;Krasser, R.
+(2020).
+&amp;ldquo;explore: Simplifies Exploratory Data Analysis&amp;rdquo;.
+In: &lt;em&gt;https://cran.r-project.org/web/packages/explore/index.html&lt;/em&gt;.&lt;/cite&gt;&lt;/p&gt;
+- 
+&lt;p&gt;&lt;cite&gt;Do, C. and S. Batzoglou
+(2008).
+&amp;ldquo;What is the expectation maximization algorithm?&amp;rdquo;
+In: &lt;em&gt;Nature Biotechnology 26, pages 897 to 899&lt;/em&gt;.&lt;/cite&gt;&lt;/p&gt;
+
+---
+
+layout: false
+class: middle left
+
+&lt;img src="images/userlogo.png" class="user-logo top-1" /&gt;
+
+&lt;p class="pompiere f1"&gt;&amp;#x1F31F; &lt;a href="https://github.com/genomix"&gt;&lt;span class="gray"&gt;github.com&lt;/span&gt;/genomix&lt;/a&gt;&lt;/p&gt;
+
+--
+
+&lt;p class="pompiere f1"&gt;&amp;#x1F5E3; &lt;a href="https://twitter.com/genomixgmailcom"&gt;&amp;commat;genomix&lt;/a&gt;&lt;/p&gt;
+
+--
+
+&lt;p class="pompiere f1"&gt;&amp;#x1F468;&amp;#x1F3FC;&amp;#x200D;&amp;#x1F4BB; &lt;a href="https://genomix.netlify.app"&gt;genomix.netlify.app&lt;/a&gt;&lt;/p&gt;
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="assets/remark-0.14.0.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "atom-one-light",
+"highlightLines": true,
+"ratio": "16:9",
+"countIncrementalSlides": true,
+"slideNumberFormat": "%current%"
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
