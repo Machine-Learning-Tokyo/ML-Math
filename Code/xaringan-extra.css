@@ -1,0 +1,193 @@
+.full-screen {
+  padding: 0;
+}
+
+.hide-count .remark-slide-number {
+  display: none;
+}
+
+.grid-3-2 {
+  display: grid;
+  height: calc(100%);
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: 1fr 1fr;
+  align-items: center;
+  text-align: center;
+  grid-gap: 1em;
+  padding: 1em;
+}
+
+.extension-tile {
+	height: 100%;
+	width: 100%;
+	align-items: center;
+	justify-content: center;
+	display: flex;
+	font-family: 'Staatliches';
+	font-size: 2em;
+}
+
+.tileview {
+  background: #8380B6;
+  color: white;
+}
+
+.panelset-tile {
+  background-color: #F17F29;
+  color: white;
+}
+
+.editable {
+  background: #97D8C4;
+}
+
+.animate {
+  background-color: #795277;
+  color: white;
+}
+
+.slide {
+  background-color: #EE6D91;
+  color: white;
+  z-index: 100;
+}
+
+.panelset-tile {
+  background-color: #F38D3F;
+}
+
+.webcam {
+  background-color: #79C7C5;
+  background-color: #1381B0;
+  color: white;
+}
+
+.title-slide h1 {
+  font-family: Pompiere,var(--header-font-family);
+  font-size: 5em;
+  line-height: 1;
+  margin-bottom: 0;
+}
+
+.title-slide h2 {
+  font-family: Pompiere,var(--header-font-family);
+  margin-top: 0;
+}
+
+.pompiere {
+  font-family: Pompiere,var(--header-font-family);
+}
+
+.title-slide .author {
+	font-family: Pompiere,var(--header-font-family);
+	font-size: 2em;
+	position: absolute;
+	bottom: 0em;
+}
+
+.title-slide .twitter {
+	position: absolute;
+	bottom: 0;
+}
+
+.user-logo {
+  width: 150px;
+  position: absolute;
+  bottom: 1em;
+  right: 1.5em;
+  background: white;
+}
+
+.key {
+color:#000;
+margin:0 5px;
+padding:1px 5px;
+font-family:courier new;
+font-size:1.2em;
+border:1px #fff;
+-webkit-border-radius:3px;
+   -moz-border-radius:3px;
+        border-radius:3px;
+background:-webkit-gradient(
+  linear,
+  left top,
+  right top,
+  color-stop(0%, #fff),
+  color-stop(25%, #fff)
+/* White Keyboard Key Style by Showeblogin */);
+background:-o-linear-gradient(left, #fff 0%, #fff 25%);
+background:-moz-linear-gradient(left, #fff 0%, #fff 25%);
+background:-webkit-linear-gradient(left, #fff 0%, #fff 25%);
+background:-ms-linear-gradient(left, #fff 0%, #fff 25%);
+background:linear-gradient(left, #fff 0%, #fff 25%);
+-webkit-box-shadow:1px 0 1px 0 #999, 0 2px 0 2px lightGray, 0 2px 0 3px #666;
+   -moz-box-shadow:1px 0 1px 0 #999, 0 2px 0 2px lightGray, 0 2px 0 3px #666;
+        box-shadow:1px 0 1px 0 #999, 0 2px 0 2px lightGray, 0 2px 0 3px #666;
+}
+
+.remark-slide-content h1 {
+  margin-bottom: 0.25em;
+}
+
+.bigger {
+	font-size: 0.9em;
+}
+
+.footnote {
+	font-size: 0.4em;
+	position: absolute;
+    bottom: 1em;
+    right: 1.5em;
+    background: white;
+}
+
+.huge p:not(.remark-slide-number) {
+  font-size: 5em;
+}
+
+.bigger pre code {
+	font-size: 0.9em;
+}
+
+.remark-code-has-line-highlighted .remark-code-line:not(.remark-code-line-highlighted) {
+  opacity: 0.4;
+}
+
+.remark-code-line-highlighted {
+  background-color: inherit; /* Override highlight color */
+  /* font-weight: 500; */
+}
+
+/* Line Hover Indicator */
+.remark-code-line:hover {
+  font-weight: bold;
+  opacity: 1 !important;
+}
+
+.remark-code-line:hover:before {
+  content: "\25B6";
+  color: #6d7e8a;
+  position: absolute;
+  transform: translateX(-1.2em);
+  animation: hover 0.66s alternate 8 cubic-bezier(0.445, 0.05, 0.55, 0.95);
+}
+
+@keyframes hover {
+  0% {
+    transform: translateX(-1.2em);
+  }
+  100% {
+    transform: translateX(-0.8em);
+  }
+}
+
+::selection {
+  background-color: rgba(85, 235, 188, 0.6);
+}
+
+.not-last {
+  display: none;
+}
+.has-continuation .not-last {
+  display: unset;
+}
